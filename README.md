@@ -1,0 +1,1 @@
+# DiarioHumor&GatilhoApp
