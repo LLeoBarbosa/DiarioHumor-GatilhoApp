@@ -1,0 +1,140 @@
+﻿@page "/estatisticas"
+@using DHG.Client.Models
+@using DHG.Client.Services
+@using DHG.Client.ViewModel
+
+<!--***********************************************************************************************************************************-->
+
+<h3>Estatísticas de Humor e Gatilhos</h3>
+
+@if (isLoading)
+{
+    <p><em>Carregando dados...</em></p>
+}
+else if (registros == null || !registros.Any())
+{
+    <p>Não há registros de diário para exibir estatísticas.</p>
+}
+else
+{
+    <h4>Visão Geral</h4>
+
+    <div class="row">
+    
+        <div class="col-md-4">
+
+            <div class="card p-3">
+                <h5 class="card-title">Média de Intensidade</h5>
+                <p class="card-text display-4">@MediaIntensidade.ToString("F1") / 10</p>
+            </div>
+
+        </div>
+        
+        <div class="col-md-4">
+            
+            <div class="card p-3">
+                <h5 class="card-title">Humor Mais Frequente</h5>
+                <p class="card-text display-4">@HumorMaisFrequente</p>
+            </div>
+
+        </div>
+        
+        <div class="col-md-4">
+            
+            <div class="card p-3">
+                <h5 class="card-title">Total de Registros</h5>
+                <p class="card-text display-4">@registros.Count</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <hr />
+
+    <h4>Frequência de Emoções</h4>
+     
+    <div style="height: 400px; border: 1px dashed #ccc; padding: 10px;">
+
+        <p>Placeholder do Gráfico de Emoções (Necessário configurar uma biblioteca de gráficos Blazor)</p>
+        
+        <ul>
+            @foreach (var item in ContagemPorHumor.OrderByDescending(kv => kv.Value))
+            {
+                <li>@item.Key: @item.Value ocorrências (@((item.Value / (double)registros.Count).ToString("P0")))</li>
+            }
+        </ul>
+
+    </div>
+
+}
+
+<!--***********************************************************************************************************************************-->
+
+@inject RegistroDiarioService registrodiarioservices
+@inject IJSRuntime jsruntime
+
+@code {
+   
+    private List<RegistroDiarioViewModel>? registros;
+    private bool isLoading = true;
+  
+    private double MediaIntensidade { get; set; }
+    private string HumorMaisFrequente { get; set; } = "N/A";
+   
+    private Dictionary<string, int> ContagemPorHumor = new Dictionary<string, int>();
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        registros = await registrodiarioservices.ObterTodosRegistrosAsync();
+
+        if (registros != null && registros.Any())
+        {
+            CalcularEstatisticas();
+        }
+
+        isLoading = false;
+    }
+    
+    private void CalcularEstatisticas()
+    {
+        // =========================================================
+        // A. CÁLCULO DA MÉDIA DE INTENSIDADE
+        // =========================================================
+        MediaIntensidade = registros!.Average(r => r.NivelIntensidade);
+
+        // =========================================================
+        // B. CONTAGEM POR HUMOR (para o Gráfico)
+        // =========================================================
+        ContagemPorHumor = registros.GroupBy(r => r.EmocaoPrincipal).ToDictionary(g => g.Key, g => g.Count());
+
+        // =========================================================
+        // C. HUMOR MAIS FREQUENTE
+        // =========================================================
+        var maisFrequente = ContagemPorHumor.OrderByDescending(kv => kv.Value).FirstOrDefault();
+
+        if (maisFrequente.Key != null)
+        {
+            HumorMaisFrequente = maisFrequente.Key;
+        }
+    
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && registros != null && registros.Any())
+        {
+          
+            await jsruntime.InvokeVoidAsync(
+                "diarioCharts.renderizarGraficoEmocoes",
+                "emocoesChart",                         
+                ContagemPorHumor.Keys.ToArray(),        
+                ContagemPorHumor.Values.ToArray()       
+            );
+    
+        }
+    
+    }
+
+}

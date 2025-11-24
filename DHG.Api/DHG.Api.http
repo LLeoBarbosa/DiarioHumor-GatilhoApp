@@ -1,0 +1,6 @@
+@DHG.Api_HostAddress = http://localhost:5064
+
+GET {{DHG.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
