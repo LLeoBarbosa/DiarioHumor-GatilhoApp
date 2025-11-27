@@ -99,19 +99,11 @@ else
     
     private void CalcularEstatisticas()
     {
-        // =========================================================
-        // A. CÁLCULO DA MÉDIA DE INTENSIDADE
-        // =========================================================
+      
         MediaIntensidade = registros!.Average(r => r.NivelIntensidade);
-
-        // =========================================================
-        // B. CONTAGEM POR HUMOR (para o Gráfico)
-        // =========================================================
-        ContagemPorHumor = registros.GroupBy(r => r.EmocaoPrincipal).ToDictionary(g => g.Key, g => g.Count());
-
-        // =========================================================
-        // C. HUMOR MAIS FREQUENTE
-        // =========================================================
+              
+        ContagemPorHumor = registros!.GroupBy(r => r.EmocaoPrincipal).ToDictionary(g => g.Key, g => g.Count());
+             
         var maisFrequente = ContagemPorHumor.OrderByDescending(kv => kv.Value).FirstOrDefault();
 
         if (maisFrequente.Key != null)

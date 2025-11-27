@@ -1,0 +1,99 @@
+﻿@page "/"
+
+@using DHG.Client.Services
+@using DHG.Client.ViewModel
+
+<!--***********************************************************************************************************************************-->
+
+<h3>Diário de Humor e Gatilhos</h3>
+<hr />
+
+<p>
+    <a class="btn btn-success" href="adicionar-registro">Adicionar Novo Registro</a>
+</p>
+
+@if (isLoading)
+{
+    <p><em>Carregando registros...</em></p>
+}
+else if (registros == null || !registros.Any())
+{
+    <p>Não há registros de diário. Comece adicionando um!</p>
+}
+else
+{
+    <table class="table table-striped table-hover">
+
+        <thead>
+        
+            <tr>
+                <th>Data</th>
+
+                <th>Emoção</th>
+                
+                <th>Intensidade</th>
+                
+                <th>Gatilho</th>
+                
+                <th>Ações</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+        
+            @foreach (var registro in registros)
+            {
+                <tr>
+            
+                    <td>@registro.DataRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                    
+                    <td><strong>@registro.EmocaoPrincipal</strong></td>
+                    
+                    <td><span class="badge bg-secondary">@registro.NivelIntensidade / 10</span></td>
+                    
+                    <td>@registro.DescricaoGatilho</td>
+                    
+                    <td>
+                    
+                        <button class="btn btn-sm btn-primary" @* @onclick="() => NavigateToEdit(registro.Id) *@">Editar</button>
+
+                        <button class="btn btn-sm btn-danger"@*  @onclick="() => LidarComRemocao(registro.Id) *@">Excluir</button>
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+}
+
+<!--***********************************************************************************************************************************-->
+
+@inject RegistroDiarioService registroDiarioService;
+@inject NavigationManager navManager;
+
+@code {
+
+    private List<RegistroDiarioViewModel>? registros;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarRegistros();        
+    }
+
+    //¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨
+
+    private async Task CarregarRegistros()
+    {
+        isLoading = true;
+        // Chama o método GET do serviço para buscar todos os dados
+        registros = await registroDiarioService.ObterTodosRegistrosAsync();
+        isLoading = false;
+    }
+
+}

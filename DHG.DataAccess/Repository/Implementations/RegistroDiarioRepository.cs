@@ -32,7 +32,18 @@ namespace DHG.DataAccess.Repository.Implementations
 
         public async Task<bool> AtualizarAsync(RegistroDiario registro)
         {
-            throw new NotImplementedException();
+            try
+            {                
+                _context.RegistrosDiarios.Update(registro);
+                
+                int linhasAfetadas = await _context.SaveChangesAsync();
+
+                return linhasAfetadas > 0;
+            }
+            catch (DbUpdateConcurrencyException)
+            {                
+                return false;
+            }
         }
 
         //*********************************************************************************
@@ -64,7 +75,19 @@ namespace DHG.DataAccess.Repository.Implementations
 
         public async Task<bool> RemoverAsync(int id)
         {
-            throw new NotImplementedException();
+         
+            var registro = await _context.RegistrosDiarios.FindAsync(id);
+
+            if (registro == null)
+            {
+                return false; 
+            }
+                        
+            _context.RegistrosDiarios.Remove(registro);
+
+            int linhasAfetadas = await _context.SaveChangesAsync();
+
+            return linhasAfetadas > 0;
         }
 
         //*********************************************************************************
